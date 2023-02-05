@@ -1,0 +1,11 @@
+{
+    "author": {
+        "name": "Antonio Araujo",
+        "email": "antoniowilliam2011@hotmail.com"
+    },
+    "name": "ninjaOneTest",
+    "version": "1.0.0",
+    "dependencies": {
+        "testcafe": "1.18.6"
+    }
+}
