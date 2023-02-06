@@ -6,6 +6,7 @@
     "name": "ninjaOneTest",
     "version": "1.0.0",
     "dependencies": {
+        "randomstring": "^1.2.3",
         "testcafe": "1.18.6"
     }
 }
