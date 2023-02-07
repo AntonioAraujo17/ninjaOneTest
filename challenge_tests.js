@@ -1,49 +1,38 @@
 const { Selector } = require("testcafe")
 var randomstring = require("randomstring");
+import page from './page-model'
 
 fixture('Ninja One Challenge')
     .page("http://localhost:3000")
 
-    const locatorDevices = 'div.list-devices-main > div > div'
-    const locatorDeviceName = 'span.device-name' 
-    const locatorDeviceType = 'span.device-type'
-    const locatorDeviceCap = 'span.device-capacity'
-    const locatorEdit = 'a.device-edit'
-    const locatorRemoveBtn = 'button.device-remove'
-    const locatorSystemName = '#system_name'
-    const locatorChangeButton = 'a.changebutton'
-
-    const listDevices = Selector(locatorDevices)
-
     test('Test 1 - Verify all displayed devices', async t =>{
 
         var currentElem = null
-        var deviceName = null
-        var deviceType = null
-        var deviceCapacity = null
-        var editLink = null
-        var removeButton = null
-        const totalDevices = await listDevices.count
+        var curDeviceName = null
+        var curDeviceType = null
+        var curDeviceCapacity = null
+        var curEditLink = null
+        var curRemoveButton = null
+        const totalDevices = await page.deviceList.count
 
         var i = 0;
         while (i < totalDevices) {
-            currentElem = Selector(listDevices.nth(i))
+            currentElem = Selector(page.deviceList.nth(i))
 
             await t.expect(currentElem.exists).ok()
             
-            deviceName = currentElem.find(locatorDeviceName)
-            deviceType = currentElem.find(locatorDeviceType)
-            deviceCapacity = currentElem.find(locatorDeviceCap)
-            editLink = currentElem.find(locatorEdit)
-            removeButton = currentElem.find(locatorRemoveBtn)
+            curDeviceName = currentElem.find(page.deviceName)
+            curDeviceType = currentElem.find(page.deviceType)
+            curDeviceCapacity = currentElem.find(page.deviceCap)
+            curEditLink = currentElem.find(page.edit)
+            curRemoveButton = currentElem.find(page.removeBtn)
 
             //asserts
-            await t
-                .expect(deviceName.visible).ok()
-                .expect(deviceType.visible).ok()
-                .expect(deviceCapacity.visible).ok()
-                .expect(editLink.visible).ok()
-                .expect(removeButton.visible).ok()
+            await page.assertDeviceComponents(curDeviceName, 
+                curDeviceType, 
+                curDeviceCapacity, 
+                curEditLink, 
+                curRemoveButton)
             i+=1
         }
 
@@ -51,60 +40,31 @@ fixture('Ninja One Challenge')
 
     test('Test 2 - Create device', async t =>{
 
-        const typeSelection = Selector("#type")
-        const typeOption = typeSelection.find('option')
-        const inputSystemName = 'Antonio MAC'
+        const inputSystemName = 'Antonio MAC ' + randomstring.generate(6)
         const inputType = 'MAC'
         const inputCapacity = '100'
 
-        await t
-            .click('a.submitButton')
-            .typeText(locatorSystemName, inputSystemName)
-            .click(typeSelection)
-            .click(typeOption.withText(inputType))
-            .typeText('#hdd_capacity', inputCapacity)
-            .click(locatorChangeButton)
+        await page.createsNewDevice(inputSystemName, inputType, inputCapacity)
         
-        await t    
-            //asserts
-            .expect(Selector(locatorDeviceName).withText(inputSystemName).exists).ok()
-            .expect(Selector(locatorDeviceName).withText(inputSystemName).visible).ok()
-
-            .expect(Selector(locatorDeviceType).withText(inputType).exists).ok()
-            .expect(Selector(locatorDeviceType).withText(inputType).visible).ok()
-
-            .expect(Selector(locatorDeviceCap).withText(inputCapacity).exists).ok()
-            .expect(Selector(locatorDeviceCap).withText(inputCapacity).visible).ok()
+        await page.assertNewCreatedDevice(page.deviceName, inputSystemName)   
+        await page.assertNewCreatedDevice(page.deviceType, inputType)
+        await page.assertNewCreatedDevice(page.deviceCap, inputCapacity)
 
     })
 
     test('Test 3 - Rename device', async t =>{
-        const firstDevice = Selector(listDevices).nth(0).find(locatorDeviceName)
-        const oldName = await firstDevice.innerText
+        const oldName = await page.getFirstDeviceName()
         const newName = randomstring.generate(6)
 
-        await t 
-            .click(listDevices.nth(0).find(locatorEdit))
-            .typeText(locatorSystemName, newName, {replace: true})
-            .click(locatorChangeButton)
-
-            //asserts
-        await t    
-            .expect(firstDevice.innerText).eql(newName)
-            .expect(Selector(locatorDeviceName).withText(oldName).exists).notOk()
+        await page.editDeviceName(newName)
+        await page.assertDeviceNameEdited(newName, oldName)
 
     })
 
     test('Test 4 - Delete device', async t =>{
-        const lastDeviceName = await Selector(listDevices).nth(-1).find(locatorDeviceName).innerText
+        const lastDeviceName = await page.deviceList.nth(-1).find(page.deviceName).innerText
 
-        await t
-            .expect(Selector(locatorDeviceName).withText(lastDeviceName).exists).ok()
-            .click(listDevices.nth(-1).find(locatorRemoveBtn))
-
-        //asserts
-        await t
-            .expect(Selector(locatorDeviceName).withText(lastDeviceName).visible).notOk()
-            .expect(Selector(locatorDeviceName).withText(lastDeviceName).exists).notOk()
+        await page.deleteLastDevice(lastDeviceName)   
+        await page.assertLastDeviceDeleted(lastDeviceName)
 
     })
